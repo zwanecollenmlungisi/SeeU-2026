@@ -626,7 +626,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Auth state changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
             currentUser = null; currentProfile = null;
             showScreen('signinScreen');
