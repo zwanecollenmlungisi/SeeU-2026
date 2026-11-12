@@ -662,13 +662,26 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 function hideLoading() {
     const ls = document.getElementById('loadingScreen');
-    ls.style.opacity = '0';
-    setTimeout(() => ls.style.display = 'none', 400);
+    if (ls) {
+        ls.style.opacity = '0';
+        setTimeout(() => {
+            ls.style.display = 'none';
+        }, 400);
+    }
 }
 
 async function routeAfterAuth() {
     hideLoading();
-    showScreen('profilePage'); 
+    console.log("Routing user after auth. Current user:", currentUser ? currentUser.email : "None");
+
+    if (!currentUser) {
+        // If no user is logged in, show the welcome screen
+        showScreen('welcomeScreen');
+    } else {
+        // If logged in, show the main app screen. 
+        // 🔴 CHANGE 'profilePage' TO THE EXACT ID OF YOUR MAIN APP SCREEN!
+        showScreen('profilePage'); 
+    }
 }
 
 // ============================================================
