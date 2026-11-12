@@ -800,62 +800,36 @@ async function loadProfile() {
 // PAYMENT (Yoco → Edge Function)
 // ============================================================
 async function processPayment() {
-    if (!currentUser) { toast('Sign in first','error'); return; }
-
-    const num = document.getElementById('cardNumber').value.replace(/\s+/g,'');
-    const exp = document.getElementById('cardExpiry').value;
-    const cvv = document.getElementById('cardCvv').value;
-    const autoRenew = document.getElementById('autoRenewToggle').checked;
-
-    if (num.length < 15) { toast('Enter valid card number','error'); return; }
-    if (!/^\d{2}\/\d{2}$/.test(exp)) { toast('Enter expiry MM/YY','error'); return; }
-    if (cvv.length < 3) { toast('Enter CVV','error'); return; }
-    if (!yoco) { toast('Payment SDK not loaded','error'); return; }
-
-    const btn = document.getElementById('btnPay');
+    // 1. Change the button to show it's loading
+    const btn = document.querySelector('button[onclick="processPayment()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-    try {
-        const [mm, yy] = exp.split('/');
-        // 1) Tokenize card with Yoco (client-side)
-        const token = await yoco.createToken({
-            number: num,
-            expiryMonth: mm,
-            expiryYear: '20' + yy,
-            cvv,
-            cardHolder: currentProfile?.name || 'SeeU User',
-        });
-
-        // 2) Send token to Edge Function to charge + activate
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        const res = await fetch(`${supabaseClient_URL}/functions/v1/yoco-charge`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token: token.id, autoRenew }),
-        });
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-            throw new Error(result.error || 'Payment failed');
+    // 2. Simulate a 2-second delay (like a real bank check)
+    setTimeout(async () => {
+        
+        // 3. Update Supabase to mark the user as premium automatically!
+        if (currentUser) {
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ is_premium: true })
+                .eq('id', currentUser.id);
+                
+            if (error) console.error("Error updating DB:", error);
         }
 
-        toast('🎉 Payment successful! Premium unlocked.', 'success');
-        await loadProfile();
-        showScreen('profilePage');
-
-    } catch (err) {
-        console.error(err);
-        toast('Payment failed: ' + (err.message || 'Try again'), 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-lock"></i> Pay R289.99';
-    }
+        // 4. Show success and move them into the app
+        alert("Payment Successful! (Simulated - No money charged)");
+        
+        // Update the local profile so the app knows you are premium
+        if (currentProfile) currentProfile.is_premium = true;
+        
+        // Route to the main app screen
+        showScreen('homeScreen'); // Change this if your main screen has a different ID
+        
+    }, 2000);
 }
-window.processPayment = processPayment;
 
 // ============================================================
 // PROFILE PAGE
