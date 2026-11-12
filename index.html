@@ -699,11 +699,22 @@ function toast(msg, type='info') {
 // SCREENS
 // ============================================================
 function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id)?.classList.add('active');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.nav-btn[data-page="${id}"]`)?.classList.add('active');
+    const targetScreen = document.getElementById(id);
+    
+    // Check if the screen exists to prevent crashing
+    if (!targetScreen) {
+        console.error(`🚨 ERROR: Could not find a screen with id="${id}". Check your HTML!`);
+        return; // Stop the function so it doesn't crash the app
+    }
 
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    targetScreen.classList.add('active');
+    
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const navBtn = document.querySelector(`.nav-btn[data-page="${id}"]`);
+    if (navBtn) navBtn.classList.add('active');
+
+    // Load data based on the screen
     if (id === 'profilePage') loadProfilePage();
     else if (id === 'discoverPage') loadDiscoverPage();
     else if (id === 'matchesPage') loadMatchesPage();
