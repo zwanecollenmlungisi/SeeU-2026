@@ -7,8 +7,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
-    <!-- supabaseClient JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabaseClient/supabaseClient-js@2"></script>
+    <!-- supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -589,12 +589,12 @@
 
 <script>
 // ============================================================
-// supabaseClient SETUP
+// supabase SETUP
 // ============================================================
-const supabaseClient_URL = 'https://ymxaybicaekibajpkaxj.supabaseClient.co';
-const supabaseClient_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteGF5YmljYWVraWJhanBrYXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODU4NjYsImV4cCI6MjA4MzM2MTg2Nn0.wYVPYEbYfE7oKJZYuU3YB2RDgU2kuEl7LC36wNW8yTU';
+const supabase_URL = 'https://ymxaybicaekibajpkaxj.supabase.co';
+const supabase_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteGF5YmljYWVraWJhanBrYXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODU4NjYsImV4cCI6MjA4MzM2MTg2Nn0.wYVPYEbYfE7oKJZYuU3YB2RDgU2kuEl7LC36wNW8yTU';
 
-const supabaseClientClient = window.supabaseClient.createClient(supabaseClient_URL, supabaseClient_ANON_KEY);
+const supabase = window.supabase.createClient(supabase_URL, supabase_ANON_KEY);
 
 
 // ============================================================
@@ -615,7 +615,7 @@ const PLAN_PRICE = 289.99;
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
     // Restore session
-    const { data: { session } } = await supabaseClientClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session?.user) {
         currentUser = session.user;
         await loadProfile();
@@ -626,7 +626,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Auth state changes
-    supabaseClientClient.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
             currentUser = null; currentProfile = null;
             showScreen('signinScreen');
@@ -699,7 +699,7 @@ async function signIn() {
     const btn = document.getElementById('btnSignIn');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-    const { data, error } = await supabaseClientClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
 
     if (error) { toast(error.message,'error'); return; }
@@ -723,7 +723,7 @@ async function signUp() {
     const btn = document.getElementById('btnSignUp');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
-    const { data, error } = await supabaseClientClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email, password,
         options: { data: { name, phone } }
     });
@@ -745,7 +745,7 @@ async function useDemo() {
     const password = 'DemoPass123!';
     const name = 'Demo User';
 
-    const { data, error } = await supabaseClientClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email, password,
         options: { data: { name, phone: '+27123456789' } }
     });
@@ -762,7 +762,7 @@ window.useDemo = useDemo;
 
 async function logout() {
     if (!confirm('Log out of See U?')) return;
-    await supabaseClient.auth.signOut();
+    await supabase.auth.signOut();
     currentUser = null; currentProfile = null; currentPhotos = [];
     showScreen('signinScreen');
 }
@@ -774,7 +774,7 @@ window.logout = logout;
 async function loadProfile() {
     if (!currentUser) return;
 
-    const { data, error } = await supabaseClientClient
+    const { data, error } = await supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
@@ -783,7 +783,7 @@ async function loadProfile() {
     if (error) { console.error(error); toast('Failed loading profile','error'); return; }
     currentProfile = data;
 
-    const { data: photos } = await supabaseClientClient
+    const { data: photos } = await supabaseClient
         .from('photos')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -823,8 +823,8 @@ async function processPayment() {
         });
 
         // 2) Send token to Edge Function to charge + activate
-        const { data: { session } } = await supabaseClientClient.auth.getSession();
-        const res = await fetch(`${supabaseClient_URL}/functions/v1/yoco-charge`, {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const res = await fetch(`${supabase_URL}/functions/v1/yoco-charge`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${session.access_token}`,
@@ -1002,7 +1002,7 @@ async function saveProfile() {
             .split(',').map(s => s.trim()).filter(Boolean),
     };
 
-    const { error } = await supabaseClientClient.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
 
     if (error) { toast(error.message,'error'); return; }
@@ -1039,12 +1039,12 @@ async function uploadPhotos() {
     for (let i = 0; i < files.length; i++) {
         const f = files[i];
         const path = `${currentUser.id}/${Date.now()}_${i}_${f.name}`;
-        const { error: upErr } = await supabaseClientClient.storage.from('photos').upload(path, f, { upsert: false });
+        const { error: upErr } = await supabaseClient.storage.from('photos').upload(path, f, { upsert: false });
         if (upErr) { toast(upErr.message,'error'); continue; }
 
-        const { data: { publicUrl } } = supabaseClientClient.storage.from('photos').getPublicUrl(path);
+        const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(path);
 
-        await supabaseClientClient.from('photos').insert({
+        await supabaseClient.from('photos').insert({
             user_id: currentUser.id,
             url: publicUrl,
             storage_path: path,
@@ -1061,8 +1061,8 @@ window.uploadPhotos = uploadPhotos;
 
 async function removePhoto(id, path) {
     if (!confirm('Delete this photo?')) return;
-    await supabaseClientClient.storage.from('photos').remove([path]);
-    await supabaseClientClient.from('photos').delete().eq('id', id);
+    await supabaseClient.storage.from('photos').remove([path]);
+    await supabaseClient.from('photos').delete().eq('id', id);
     toast('Photo removed');
     loadProfilePage();
 }
@@ -1088,13 +1088,13 @@ async function uploadVideo() {
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
 
     const path = `${currentUser.id}/video_${Date.now()}.${f.name.split('.').pop()}`;
-    const { error } = await supabaseClientClient.storage.from('videos').upload(path, f, { upsert: true });
+    const { error } = await supabaseClient.storage.from('videos').upload(path, f, { upsert: true });
 
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Upload Video';
     if (error) { toast(error.message,'error'); return; }
 
-    const { data: { publicUrl } } = supabaseClientClient.storage.from('videos').getPublicUrl(path);
-    await supabaseClientClient.from('profiles').update({ video_url: publicUrl }).eq('id', currentUser.id);
+    const { data: { publicUrl } } = supabaseClient.storage.from('videos').getPublicUrl(path);
+    await supabaseClient.from('profiles').update({ video_url: publicUrl }).eq('id', currentUser.id);
     toast('Video uploaded', 'success');
     closeModal('uploadVideoModal');
     loadProfilePage();
@@ -1104,7 +1104,7 @@ window.uploadVideo = uploadVideo;
 async function removeVideo(ev) {
     ev.stopPropagation();
     if (!confirm('Remove video?')) return;
-    await supabaseClientClient.from('profiles').update({ video_url: null }).eq('id', currentUser.id);
+    await supabaseClient.from('profiles').update({ video_url: null }).eq('id', currentUser.id);
     toast('Video removed');
     loadProfilePage();
 }
@@ -1119,7 +1119,7 @@ function toggleBusinessFeature() {
     if (on) form.classList.add('active');
     else {
         form.classList.remove('active');
-        supabaseClientClient.from('profiles').update({
+        supabaseClient.from('profiles').update({
             business_name: null, business_description: null, business_contact: null
         }).eq('id', currentUser.id).then(() => loadProfilePage());
     }
@@ -1135,7 +1135,7 @@ async function saveBusinessInfo() {
         business_description: document.getElementById('businessDescription').value.trim(),
         business_contact: document.getElementById('businessContact').value.trim(),
     };
-    const { error } = await supabaseClientClient.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Business Info';
 
     if (error) { toast(error.message,'error'); return; }
@@ -1150,7 +1150,7 @@ window.saveBusinessInfo = saveBusinessInfo;
 async function loadDiscoverPage() {
     const c = document.getElementById('discoverContent');
 
-    const { data, error } = await supabaseClientClient
+    const { data, error } = await supabaseClient
         .from('profiles')
         .select('id,name,age,location,bio,interests,video_url,business_name,business_description,business_contact,is_premium')
         .neq('id', currentUser.id)
@@ -1171,7 +1171,7 @@ async function renderDiscoverUser(idx) {
     currentDiscoverUserId = u.id;
     currentPhotoIndex = 0;
 
-    const { data: photos } = await supabaseClientClient.from('photos').select('*').eq('user_id', u.id).order('order');
+    const { data: photos } = await supabaseClient.from('photos').select('*').eq('user_id', u.id).order('order');
     const userPhotos = photos || [];
 
     const photosHTML = userPhotos.length
@@ -1248,7 +1248,7 @@ function goToPhoto(i) {
 window.prevPhoto = prevPhoto; window.nextPhoto = nextPhoto; window.goToPhoto = goToPhoto;
 
 // ============================================================
-// LIKE (4-second delay + supabaseClient write)
+// LIKE (4-second delay + supabase write)
 // ============================================================
 async function likeUser(targetUserId) {
     if (!currentProfile?.is_premium) {
@@ -1272,7 +1272,7 @@ async function likeUser(targetUserId) {
     overlay.classList.remove('active');
 
     // Save like
-    const { error } = await supabaseClient.from('likes').insert({
+    const { error } = await supabase.from('likes').insert({
         from_user: currentUser.id,
         to_user: targetUserId,
     });
@@ -1281,7 +1281,7 @@ async function likeUser(targetUserId) {
     }
 
     // Check for match (did they like us back?)
-    const { data: reciprocal } = await supabaseClient
+    const { data: reciprocal } = await supabase
         .from('likes').select('id')
         .eq('from_user', targetUserId)
         .eq('to_user', currentUser.id)
@@ -1290,7 +1290,7 @@ async function likeUser(targetUserId) {
     if (reciprocal) {
         const target = discoverUsers.find(u => u.id === targetUserId);
         // Fetch phone
-        const { data: tp } = await supabaseClient.from('profiles').select('name,phone').eq('id', targetUserId).single();
+        const { data: tp } = await supabase.from('profiles').select('name,phone').eq('id', targetUserId).single();
         document.getElementById('matchUserName').textContent = tp?.name || target?.name || 'Match';
         document.getElementById('matchUserPhone').textContent = tp?.phone || 'Not shared';
         document.getElementById('matchModal')._targetPhone = tp?.phone || '';
@@ -1320,14 +1320,14 @@ async function loadMatchesPage() {
     c.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400);">Loading...</div>';
 
     // My likes → they liked back
-    const { data: myLikes } = await supabaseClient.from('likes').select('to_user').eq('from_user', currentUser.id);
+    const { data: myLikes } = await supabase.from('likes').select('to_user').eq('from_user', currentUser.id);
     const myTargets = (myLikes||[]).map(l => l.to_user);
     if (!myTargets.length) {
         c.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400);">No matches yet. Start liking!</div>';
         return;
     }
 
-    const { data: mutual } = await supabaseClient
+    const { data: mutual } = await supabase
         .from('likes')
         .select('from_user')
         .eq('to_user', currentUser.id)
@@ -1339,13 +1339,13 @@ async function loadMatchesPage() {
         return;
     }
 
-    const { data: profiles } = await supabaseClient
+    const { data: profiles } = await supabase
         .from('profiles').select('id,name,age,phone,business_name').in('id', matchIds);
 
     // Load each match's first photo
     const cards = [];
     for (const p of profiles || []) {
-        const { data: photo } = await supabaseClient
+        const { data: photo } = await supabase
             .from('photos').select('url').eq('user_id', p.id).order('order').limit(1).maybeSingle();
         cards.push({ ...p, photoUrl: photo?.url });
     }
