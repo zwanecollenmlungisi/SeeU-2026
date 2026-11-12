@@ -699,7 +699,7 @@ async function signIn() {
     const btn = document.getElementById('btnSignIn');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
 
     if (error) { toast(error.message,'error'); return; }
