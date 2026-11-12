@@ -622,7 +622,7 @@ const PLAN_PRICE = 289.99;
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
     // Restore session
-    const { data: { session } } = await supabaseClientClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session?.user) {
         currentUser = session.user;
         await loadProfile();
@@ -706,7 +706,7 @@ async function signIn() {
     const btn = document.getElementById('btnSignIn');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-    const { data, error } = await supabaseClientClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
 
     if (error) { toast(error.message,'error'); return; }
@@ -730,7 +730,7 @@ async function signUp() {
     const btn = document.getElementById('btnSignUp');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
-    const { data, error } = await supabaseClientClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email, password,
         options: { data: { name, phone } }
     });
@@ -752,7 +752,7 @@ async function useDemo() {
     const password = 'DemoPass123!';
     const name = 'Demo User';
 
-    const { data, error } = await supabaseClientClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email, password,
         options: { data: { name, phone: '+27123456789' } }
     });
@@ -781,7 +781,7 @@ window.logout = logout;
 async function loadProfile() {
     if (!currentUser) return;
 
-    const { data, error } = await supabaseClientClient
+    const { data, error } = await supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
@@ -790,7 +790,7 @@ async function loadProfile() {
     if (error) { console.error(error); toast('Failed loading profile','error'); return; }
     currentProfile = data;
 
-    const { data: photos } = await supabaseClientClient
+    const { data: photos } = await supabaseClient
         .from('photos')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -830,7 +830,7 @@ async function processPayment() {
         });
 
         // 2) Send token to Edge Function to charge + activate
-        const { data: { session } } = await supabaseClientClient.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         const res = await fetch(`${supabaseClient_URL}/functions/v1/yoco-charge`, {
             method: 'POST',
             headers: {
@@ -1009,7 +1009,7 @@ async function saveProfile() {
             .split(',').map(s => s.trim()).filter(Boolean),
     };
 
-    const { error } = await supabaseClientClient.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
 
     if (error) { toast(error.message,'error'); return; }
@@ -1046,12 +1046,12 @@ async function uploadPhotos() {
     for (let i = 0; i < files.length; i++) {
         const f = files[i];
         const path = `${currentUser.id}/${Date.now()}_${i}_${f.name}`;
-        const { error: upErr } = await supabaseClientClient.storage.from('photos').upload(path, f, { upsert: false });
+        const { error: upErr } = await supabaseClient.storage.from('photos').upload(path, f, { upsert: false });
         if (upErr) { toast(upErr.message,'error'); continue; }
 
-        const { data: { publicUrl } } = supabaseClientClient.storage.from('photos').getPublicUrl(path);
+        const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(path);
 
-        await supabaseClientClient.from('photos').insert({
+        await supabaseClient.from('photos').insert({
             user_id: currentUser.id,
             url: publicUrl,
             storage_path: path,
@@ -1068,8 +1068,8 @@ window.uploadPhotos = uploadPhotos;
 
 async function removePhoto(id, path) {
     if (!confirm('Delete this photo?')) return;
-    await supabaseClientClient.storage.from('photos').remove([path]);
-    await supabaseClientClient.from('photos').delete().eq('id', id);
+    await supabaseClient.storage.from('photos').remove([path]);
+    await supabaseClient.from('photos').delete().eq('id', id);
     toast('Photo removed');
     loadProfilePage();
 }
@@ -1095,13 +1095,13 @@ async function uploadVideo() {
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
 
     const path = `${currentUser.id}/video_${Date.now()}.${f.name.split('.').pop()}`;
-    const { error } = await supabaseClientClient.storage.from('videos').upload(path, f, { upsert: true });
+    const { error } = await supabaseClient.storage.from('videos').upload(path, f, { upsert: true });
 
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Upload Video';
     if (error) { toast(error.message,'error'); return; }
 
-    const { data: { publicUrl } } = supabaseClientClient.storage.from('videos').getPublicUrl(path);
-    await supabaseClientClient.from('profiles').update({ video_url: publicUrl }).eq('id', currentUser.id);
+    const { data: { publicUrl } } = supabaseClient.storage.from('videos').getPublicUrl(path);
+    await supabaseClient.from('profiles').update({ video_url: publicUrl }).eq('id', currentUser.id);
     toast('Video uploaded', 'success');
     closeModal('uploadVideoModal');
     loadProfilePage();
@@ -1111,7 +1111,7 @@ window.uploadVideo = uploadVideo;
 async function removeVideo(ev) {
     ev.stopPropagation();
     if (!confirm('Remove video?')) return;
-    await supabaseClientClient.from('profiles').update({ video_url: null }).eq('id', currentUser.id);
+    await supabaseClient.from('profiles').update({ video_url: null }).eq('id', currentUser.id);
     toast('Video removed');
     loadProfilePage();
 }
@@ -1126,7 +1126,7 @@ function toggleBusinessFeature() {
     if (on) form.classList.add('active');
     else {
         form.classList.remove('active');
-        supabaseClientClient.from('profiles').update({
+        supabaseClient.from('profiles').update({
             business_name: null, business_description: null, business_contact: null
         }).eq('id', currentUser.id).then(() => loadProfilePage());
     }
@@ -1142,7 +1142,7 @@ async function saveBusinessInfo() {
         business_description: document.getElementById('businessDescription').value.trim(),
         business_contact: document.getElementById('businessContact').value.trim(),
     };
-    const { error } = await supabaseClientClient.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Business Info';
 
     if (error) { toast(error.message,'error'); return; }
@@ -1157,7 +1157,7 @@ window.saveBusinessInfo = saveBusinessInfo;
 async function loadDiscoverPage() {
     const c = document.getElementById('discoverContent');
 
-    const { data, error } = await supabaseClientClient
+    const { data, error } = await supabaseClient
         .from('profiles')
         .select('id,name,age,location,bio,interests,video_url,business_name,business_description,business_contact,is_premium')
         .neq('id', currentUser.id)
@@ -1178,7 +1178,7 @@ async function renderDiscoverUser(idx) {
     currentDiscoverUserId = u.id;
     currentPhotoIndex = 0;
 
-    const { data: photos } = await supabaseClientClient.from('photos').select('*').eq('user_id', u.id).order('order');
+    const { data: photos } = await supabaseClient.from('photos').select('*').eq('user_id', u.id).order('order');
     const userPhotos = photos || [];
 
     const photosHTML = userPhotos.length
