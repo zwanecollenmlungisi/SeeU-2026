@@ -7,7 +7,6 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
-    <script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -597,14 +596,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Yoco SDK
-let yoco = null;
-try {
-    yoco = new window.YocoSDK({
-        publicKey: 'pk_test_xxxxxxxxxxxxxxxx', // your Yoco public key
-        locale: 'en',
-        country: 'ZA',
-    });
 } catch(e) { console.warn('Yoco not ready', e); }
 
 // ============================================================
@@ -625,7 +616,7 @@ const PLAN_PRICE = 289.99;
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
     // Restore session
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session?.user) {
         currentUser = session.user;
         await loadProfile();
@@ -1012,7 +1003,7 @@ async function saveProfile() {
             .split(',').map(s => s.trim()).filter(Boolean),
     };
 
-    const { error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
 
     if (error) { toast(error.message,'error'); return; }
