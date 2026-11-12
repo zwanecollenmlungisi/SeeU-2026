@@ -664,9 +664,7 @@ function hideLoading() {
 
 async function routeAfterAuth() {
     hideLoading();
-    if (!currentProfile) { showScreen('paymentScreen'); return; }
-    if (currentProfile.is_premium) showScreen('profilePage');
-    else showScreen('paymentScreen');
+    showScreen('profilePage'); 
 }
 
 // ============================================================
