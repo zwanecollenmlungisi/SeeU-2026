@@ -598,6 +598,10 @@ let supabaseClient = null;
 // Check if the library successfully loaded
 if (typeof window.supabase !== 'undefined') {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      db: {
+    schema: 'public'
+  }
+});
     console.log("✅ Supabase Client initialized successfully");
 } else {
     console.error("❌ Failed to load Supabase library. Check the script tag in <head>.");
